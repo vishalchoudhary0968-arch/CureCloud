@@ -19,6 +19,16 @@ def PatientCreate(request):
     })
 
 
+@api_view(['PUT'])
+def PatientUpdate(req,id):
+    patient = Patient.objects.get(id=id)
+    serializer = PatientSerializer(patient,data=req.data)
+    if serializer.is_valid():
+        serializer.save()
+    return Response({
+        "status": "success"
+    })
+
 @api_view(['delete'])
 def PatientDelete(req,id):
     Patient.objects.filter(id=id).delete()

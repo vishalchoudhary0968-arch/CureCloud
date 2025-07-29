@@ -2,6 +2,8 @@ import React,{useState,useEffect} from 'react'
 import { UserIcon } from 'lucide-react'
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Popup from 'reactjs-popup';
+
 
 import axios from 'axios'
 
@@ -10,13 +12,15 @@ export default function Admin() {
 
   let [patientList,setPatientList] = useState([]);
 
-  useEffect(()=>{
-    async function getData() 
+  async function getData() 
     {
 
       let Res = await axios.get("http://localhost:8000/api/patient/list");
       setPatientList(Res.data);
     }
+
+  useEffect(()=>{
+    
     getData();
   },[])
 
@@ -33,10 +37,42 @@ export default function Admin() {
     let Res = await axios.post("http://localhost:8000/api/patient/create", Data);
     if(Res.data.status == "success"){
       toast.success("Patient Added Successfully!");
+      getData();
     }
     else{
       toast.error("Something went wrong!");
     }
+  }
+
+
+  async function handleUpdate(e,id) {
+    e.preventDefault();
+    let Data = {
+      name: e.target[0].value,
+      pic: e.target[1].value,
+      age: e.target[2].value,
+      diseases: e.target[3].value
+    }
+    console.log(Data);
+
+    await axios.put(`http://localhost:8000/api/patient/update/${id}`, Data);
+    toast.success("Patient Updated Successfully!");
+    getData();
+    
+  }
+
+  async function  handleDelete(e) {
+                              
+    try{
+      await axios.delete(`http://localhost:8000/api/patient/delete/${e.id}`);
+      toast.success("Patient Deleted Successfully!");
+      getData();
+      
+    }
+    catch(err){
+      console.log(err);
+    }
+    
   }
 
   return (
@@ -133,8 +169,78 @@ export default function Admin() {
                       <td className="px-4 py-3 text-gray-800">{e.name}</td>
                       <td className="px-4 py-3"><img src={e.pic} alt="" className="w-12 h-12 rounded-full object-cover" /></td>
                       <td className="px-4 py-3 text-gray-800">{e.diseases}</td>
-                      <td className="px-4 py-3"><button className="bg-blue-600 text-white px-4 py-2 rounded-lg">Update</button></td>
-                      <td className="px-4 py-3"><button className="bg-red-600 text-white px-4 py-2 rounded-lg">Delete</button></td>
+                      <td className="px-4 py-3">
+                        <Popup position={"top center"} trigger={<button className="bg-blue-600 text-white px-4 py-2 rounded-lg">Update</button>} >
+                          <div className='px-4 py-3 text-left text-gray-700 font-medium bg-white'>
+
+                              <form onSubmit={(k)=>handleUpdate(k,e.id)} >
+
+                                <div className="space-y-2">
+
+                                  <label className="flex items-center gap-3 text-gray-700 font-medium">
+                                    <UserIcon size={20} className="text-blue-500" />
+                                    Patient Name
+                                  </label>
+                                  <input 
+                                    type="text" 
+                                    placeholder="Enter patient name" 
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+
+                                  <label className="flex items-center gap-3 text-gray-700 font-medium">
+                                    <UserIcon size={20} className="text-blue-500" />
+                                    Patient Picture URL
+                                  </label>
+                                  <input 
+                                    type="text" 
+                                    placeholder="Enter image URL" 
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+
+                                  <label className="flex items-center gap-3 text-gray-700 font-medium">
+                                    <UserIcon size={20} className="text-blue-500" />
+                                    Patient Age
+                                  </label>
+                                  <input 
+                                    type="number" 
+                                    placeholder="Enter patient age" 
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+
+                                  <label className="flex items-center gap-3 text-gray-700 font-medium">
+                                    <UserIcon size={20} className="text-blue-500" />
+                                    Diseases
+                                  </label>
+                                  <select 
+                                    name="diseases"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                  >
+                                    <option value="">Select a condition</option>
+                                    <option>Cancer</option>
+                                    <option>Heart Disease</option>
+                                    <option>Diabetes</option>
+                                    <option>Other</option>
+                                    <option>Jan Leva Kuch To Bhi</option>
+                                  </select>
+
+                              
+
+                                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">Update Data</button>
+
+                                </div>
+                              </form>
+
+                          </div>
+                        </Popup>  
+                      </td>
+                      
+                      
+                      <td className="px-4 py-3"><button onClick={()=>{
+                        let Confirm = window.confirm("Are you sure you want to delete this patient?");
+                        if(Confirm){
+                          handleDelete(e);
+                        }
+                      }} className="bg-red-600 text-white px-4 py-2 rounded-lg">Delete</button></td>
                     </tr>
                   ))
                 }
